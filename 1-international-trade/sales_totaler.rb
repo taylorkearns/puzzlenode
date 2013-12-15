@@ -35,13 +35,13 @@ class SalesTotaler
   private
 
   def conversions
-    initial_conversions = parsed_rates
+    initial_rates = parsed_rates
 
-    puts initial_conversions
+    puts initial_rates
   end
 
   def parsed_rates
-    RatesBuilder.build_from_xml(@rates_file)
+    RatesBuilder.new(@rates_file).build_rates
   end
 end
 

@@ -2,23 +2,58 @@ require 'spec_helper'
 require_relative '../rates_builder'
 
 describe RatesBuilder do
-  describe '.build_from_xml' do
+  before do
+    file_name = 'SAMPLE_RATES.xml'
+    @rates_builder = RatesBuilder.new(file_name)
+  end
+
+  describe '#build_rates' do
+    it 'builds out all conversion rates' do
+      expected_results = {
+        'AUD' => {
+          'CAD' => 1.0079,
+          'USD' => 1.0170
+        },
+        'CAD' => {
+          'AUD' => 0.9922,
+          'USD' => 1.009
+        },
+        'USD' => {
+          'AUD' => 0.9833,
+          'CAD' => 0.9911
+        }
+      }
+
+      expect(@rates_builder.build_rates).to eq expected_results
+    end
+  end
+
+  describe '#build_from_xml' do
     it 'raises an error if the file is not xml' do
       file_name = 'file.pdf'
 
-      expect{ RatesBuilder.build_from_xml(file_name) }.to raise_error(RuntimeError)
+      expect{ RatesBuilder.new(file_name).build_from_xml }.to raise_error(RuntimeError)
     end
 
     it 'returns a hash of conversion rates' do
       rates_file = 'SAMPLE_RATES.xml'
 
-      expected_results = [
-        { from: 'AUD', to: 'CAD', conversion: 1.0079 },
-        { from: 'CAD', to: 'USD', conversion: 1.0090 },
-        { from: 'USD', to: 'CAD', conversion: 0.9911 }
-      ]
+      expected_results = {
+        'AUD' => {
+          'CAD' => 1.0079,
+          'USD' => nil
+        },
+        'CAD' => {
+          'AUD' => nil,
+          'USD' => 1.0090
+        },
+        'USD' => {
+          'AUD' => nil,
+          'CAD' => 0.9911
+        }
+      }
 
-      expect(RatesBuilder.build_from_xml(rates_file)).to eq expected_results
+      expect(@rates_builder.build_from_xml).to eq expected_results
     end
   end
 end
