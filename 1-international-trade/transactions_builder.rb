@@ -1,4 +1,4 @@
-require 'debugger'
+require 'byebug'
 require 'csv'
 
 class TransactionsBuilder
