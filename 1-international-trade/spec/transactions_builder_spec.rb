@@ -11,6 +11,7 @@ describe TransactionsBuilder do
 
     it 'returns a hash of transactions' do
       file_name = 'SAMPLE_TRANS.csv'
+
       expected_result = [
         { store: 'Yonkers',  sku: 'DM1210', amount: 70.00, currency: 'USD' },
         { store: 'Yonkers',  sku: 'DM1182', amount: 19.68, currency: 'AUD' },

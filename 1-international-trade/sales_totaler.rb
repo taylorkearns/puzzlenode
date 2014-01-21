@@ -1,8 +1,7 @@
 require_relative 'transactions_builder'
+require_relative 'rates_builder'
 
 class SalesTotaler
-  attr_reader :totaler_sku
-
   def initialize(transactions_file: transactions_file,
                  rates_file: rates_file,
                  totaler_sku: totaler_sku,
@@ -11,41 +10,50 @@ class SalesTotaler
     @totaler_sku = totaler_sku
     @transactions_file = transactions_file
     @rates_file = rates_file
+    @totaler_currency = totaler_currency
   end
 
   def total_product_sales
     total = 0
 
+    transactions.keep_if { |t| t[:sku] == @totaler_sku }
+
     transactions.each do |t|
-      total += converted_amount(t[:amount], t[:currency]) if t[:sku] == totaler_sku
+      total += converted_amount(t[:amount], t[:currency])
     end
 
     total
+  end
+
+  def converted_amount(amount, currency)
+    rate = conversion_rates.detect do |rate|
+      rate[:from] == currency && rate[:to] == @totaler_currency
+    end
+
+    amount * rate[:conversion]
+    bankers_round(amount * rate[:conversion])
+  end
+
+  private
+
+  def bankers_round(amount)
+    if amount.to_s.split('.')[1].length >= 3
+      hundredths  = amount.round(3).to_s[-2].to_i
+      thousandths = amount.round(3).to_s[-1].to_i
+
+      if hundredths % 2 == 0 && thousandths == 5
+        return amount.round(2) - 0.01
+      end
+    end
+
+    amount.round(2)
   end
 
   def transactions
     TransactionsBuilder.build(@transactions_file)
   end
 
-  def converted_amount(amount, currency)
-    amount
-    #if currency amount
-  end
-
-  private
-
-  def conversions
-    initial_rates = parsed_rates
-
-    puts initial_rates
-  end
-
-  def parsed_rates
+  def conversion_rates
     RatesBuilder.new(@rates_file).build_rates
   end
 end
-
-SalesTotaler.new(transactions_file: 'SAMPLE_TRANS.csv',
-                 rates_file: 'SAMPLE_RATES.xml',
-                 totaler_sku: 'DM1182',
-                 totaler_currency: 'USD').total_product_sales

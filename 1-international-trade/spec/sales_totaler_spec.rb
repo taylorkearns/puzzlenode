@@ -4,7 +4,7 @@ require_relative '../sales_totaler'
 describe SalesTotaler do
   before do
     @transactions_file = 'SAMPLE_TRANS.csv'
-    @rates_file = 'SAMPLE_RATES.xml'
+    @rates_file = 'RATES.xml'
     @totaler_sku = 'DM1182'
     @totaler_currency = 'USD'
 
@@ -14,18 +14,25 @@ describe SalesTotaler do
                                       totaler_currency: @totaler_currency)
   end
 
-  describe '#total_product_sales' do
-    it 'returns the total sales for the product' do
-      pending
-      # How to stub converted_amount?
-      # Error when stubbing :transactions
-      transaction_data = [
-        { store: 'Hailey', totaler_sku: @totaler_sku, amount: 10.00, totaler_currency: @totaler_currency },
-        { store: 'Boise', totaler_sku: 'T555', amount: 15.00, totaler_currency: @totaler_currency },
-        { store: 'Ketchum', totaler_sku: @totaler_sku, amount: 20.00, totaler_currency: @totaler_currency }
-      ]
+  describe '#converted_amount' do
+    it "returns the amount converted from AUD to USD" do
+      expect(@sales_totaler.converted_amount(34.56, 'AUD')).to eq 35.15
+    end
 
-      @sales_totaler.stub(:transactions, transaction_data)
+    it "returns the amount converted from CAD to USD" do
+      expect(@sales_totaler.converted_amount(34.56, 'CAD')).to eq 34.87
+    end
+
+    it "returns the amount converted from EUR to USD" do
+      expect(@sales_totaler.converted_amount(34.56, 'EUR')).to eq 47.25
+    end
+
+    it "applies banker's rounding to round up" do
+      expect(@sales_totaler.converted_amount(5.00, 'EUR')).to eq 6.84 # 6.8355
+    end
+
+    it "applies banker's rounding to round down" do
+      expect(@sales_totaler.converted_amount(3.3247, 'EUR')).to eq 4.54 # 4.5451
     end
   end
 end
