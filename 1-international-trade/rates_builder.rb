@@ -1,38 +1,30 @@
-require 'byebug'
 require 'nokogiri'
 
 class RatesBuilder
-  attr_accessor :rates
-
   def initialize(file_name)
     @file_name = file_name
-    @rates = []
   end
 
-  def build_rates
-    rates = rates_from_xml
+  def build_rates(rates=nil)
+    rates = rates_from_xml if rates.nil?
 
-    #rates.each do |from, tos|
-      #tos.each do |currency, rate|
-        #if rate.nil?
-          #if reverse_conversion_available?(rates, currency, from)
-            #tos[currency] = (1 / rates[currency][from]).round(4)
-          #else
-            #tos.each do |c, r|
-              #if !rates[c][currency].nil?
-                #tos[currency] = (rates[from][c] * rates[c][currency]).round(4)
-              #end
-            #end
-          #end
-        #end
-      #end
-    #end
+    if conversions_incomplete?(rates)
+      rates.each do |rate|
+        rates = extrapolated_rates(rates, rate) unless rate[:conversion].nil?
+      end
+    else
+      return rates
+    end
+
+    build_rates(rates)
   end
 
   def rates_from_xml
     if @file_name.split('.').last != 'xml'
       raise 'Wrong file type for transactions file.'
     else
+      rates = []
+
       permutations = currencies.repeated_permutation(2).to_a
         .delete_if { |perm| perm[0] == perm[1] }
 
@@ -41,16 +33,72 @@ class RatesBuilder
       end
 
       xml_rates.each do |xml_rate|
-        add_conversion(xml_rate)
+        add_conversion(rates, xml_rate)
       end
     end
 
     rates
   end
 
+  def conversions_incomplete?(rates)
+    rates.each do |rate|
+      return true if rate.has_value? nil
+    end
+
+    false
+  end
+
+  def reverse_rate(rates, rate)
+    rates.detect { |r| r[:from] == rate[:to] && r[:to] == rate[:from] }
+  end
+
   private
 
-  def add_conversion(xml_rate)
+  def extrapolated_rates(rates, rate)
+    completed_rates = rates.select { |r| !r[:conversion].nil? }
+
+    completed_rates.each do |rate|
+      reverse = reverse_rate(rates, rate)
+
+      if reverse[:conversion].nil?
+        reverse[:conversion] = reverse_conversion(rate[:conversion])
+      else
+        rates = rates_with_derived(rates, rate)
+      end
+    end
+
+    rates
+  end
+
+  def rates_with_derived(rates, rate)
+    from = rate[:from]
+    to = rate[:to]
+
+    related_rates = rates.select do |r|
+      r[:from] == to && !r[:conversion].nil? && r != reverse_rate(rates, rate)
+    end
+
+    if related_rates.any?
+      related_rates.each do |related|
+        derived_rate = rates.detect do |rate|
+          rate[:from] == from && rate[:to] == related[:to]
+        end
+
+        if derived_rate[:conversion].nil?
+          derived_rate[:conversion] =
+            (rate[:conversion] * related[:conversion]).round(4)
+        end
+      end
+    end
+
+    rates
+  end
+
+  def reverse_conversion(conversion)
+    (1 / conversion).round(4)
+  end
+
+  def add_conversion(rates, xml_rate)
     from = xml_rate.css('from').text
     to = xml_rate.css('to').text
     conversion = xml_rate.css('conversion').text.to_f
