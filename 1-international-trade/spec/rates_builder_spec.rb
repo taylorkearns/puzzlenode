@@ -22,32 +22,6 @@ describe RatesBuilder do
     end
   end
 
-  #describe '#extrapolated_rates' do
-    #it 'returns reverse and derived rates' do
-      #rates = [
-        #{ from: 'AUD', to: 'CAD', conversion: 1.0079 },
-        #{ from: 'AUD', to: 'USD', conversion: nil    },
-        #{ from: 'CAD', to: 'AUD', conversion: nil    },
-        #{ from: 'CAD', to: 'USD', conversion: 1.009  },
-        #{ from: 'USD', to: 'AUD', conversion: nil    },
-        #{ from: 'USD', to: 'CAD', conversion: nil    }
-      #]
-
-      #rate = { from: 'AUD', to: 'CAD', conversion: 1.0079 }
-
-      #expected = [
-        #{ from: 'AUD', to: 'CAD', conversion: 1.0079 },
-        #{ from: 'AUD', to: 'USD', conversion: 1.0170 },
-        #{ from: 'CAD', to: 'AUD', conversion: 0.9922 },
-        #{ from: 'CAD', to: 'USD', conversion: 1.009  },
-        #{ from: 'USD', to: 'AUD', conversion: nil    },
-        #{ from: 'USD', to: 'CAD', conversion: nil    }
-      #]
-
-      #expect(@rates_builder.extrapolated_rates(rates, rate)).to eq expected
-    #end
-  #end
-
   describe '#rates_from_xml' do
     it 'raises an error if the file is not xml' do
       file_name = 'file.pdf'
