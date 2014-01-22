@@ -28,8 +28,12 @@ class SalesTotaler
   end
 
   def converted_amount(amount, currency)
-    rate = conversion_rates.detect do |rate|
-      rate[:from] == currency && rate[:to] == @totaler_currency
+    rate = { conversion: 1 }
+
+    if currency != @totaler_currency
+      rate = conversion_rates.detect do |rate|
+        rate[:from] == currency && rate[:to] == @totaler_currency
+      end
     end
 
     amount * rate[:conversion]
