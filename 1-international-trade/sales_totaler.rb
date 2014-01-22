@@ -16,10 +16,12 @@ class SalesTotaler
   def total_product_sales
     total = 0
 
-    transactions.keep_if { |t| t[:sku] == @totaler_sku }
+    relevant_transactions = transactions.keep_if { |t| t[:sku] == @totaler_sku }
 
-    transactions.each do |t|
+    relevant_transactions.each do |t|
       total += converted_amount(t[:amount], t[:currency])
+      total = total.round(2)
+
     end
 
     total
