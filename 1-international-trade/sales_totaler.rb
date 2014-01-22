@@ -22,9 +22,10 @@ class SalesTotaler
       total += converted_amount(t[:amount], t[:currency])
       total = total.round(2)
 
+      p total
     end
 
-    total
+    puts "Total: #{total}"
   end
 
   def converted_amount(amount, currency)
@@ -36,7 +37,6 @@ class SalesTotaler
       end
     end
 
-    amount * rate[:conversion]
     bankers_round(amount * rate[:conversion])
   end
 
@@ -48,7 +48,7 @@ class SalesTotaler
       thousandths = amount.round(3).to_s[-1].to_i
 
       if hundredths % 2 == 0 && thousandths == 5
-        return amount.round(2) - 0.01
+        return (amount - 0.01).round(2)
       end
     end
 
